@@ -39,102 +39,43 @@ Le projet est divisé en deux environnements distincts :
 #### 3. Étapes Détaillées de Réalisation
 Étape 0 : Préparation de l'Application Cible
 
-    Mission : Développer ou packager une application web simple (ex: une page HTML/Python Flask ou Node.js) qui affiche un message d'accueil (Welcome BDCC V1), l'adresse IP du conteneur (pour voir l'équilibrage de charge) et un compteur.
-
-    Livrables :
-
-        Un dépôt Git structuré.
-
-        Deux tags d'images Docker sur votre Docker Hub : votre-user/webapp:v1 et votre-user/webapp:v2.
+   
 
 Étape 1 : Partie 1 - Infrastructure Légère avec Docker Swarm
 
-    Fonctionnalités à implémenter :
+    Fonctionnalités implémentées:
 
-        Provisionnement automatisé : Utiliser Vagrant et un script Ansible pour lancer deux machines virtuelles Ubuntu Server, configurer le réseau local, et installer automatiquement Docker Engine.
+        Provisionnement automatisé : 
 
-        Initialisation du Cluster : Configurer la VM1 en tant que Manager et la VM2 en tant que Worker (docker swarm init et docker swarm join).
+        Initialisation du Cluster 
 
-        Déploiement et Contraintes : Déployer le service webapp en appliquant des contraintes de placement (ex: forcer le service à tourner uniquement sur le worker avec une limite de mémoire de 1 Go, comme vu à l'étape 17 du TP).
+        Déploiement et Contraintes 
 
         Mise à l'échelle (Scaling) et Rolling Update :
 
-            Augmenter le nombre de réplicas à 5.
 
-            Mettre à jour l'image vers la version v2 (webapp:v2) sans coupure de service, puis tester le retour en arrière (docker service rollback).
-
-        Résilience (Drain Mode) : Passer le nœud worker en mode drain pour observer le déplacement automatique des conteneurs vers le manager (haute disponibilité).
+        Résilience (Drain Mode)
 
 Étape 2 : Partie 2 - Migration vers Kubernetes & Approche GitOps (Argo CD)
 
-    Fonctionnalités à implémenter :
+    Fonctionnalités implémentées :
 
-        Démarrage du Cluster : Lancer un cluster Kubernetes local (via Minikube ou Kind).
+        Démarrage du Cluster
 
-        Manifestes Kubernetes purs : Rédiger les fichiers YAML :
-
-            deployment.yaml (pour gérer les réplicas de la webapp).
-
-            service.yaml (de type NodePort ou LoadBalancer).
-
-            ingress.yaml (pour l'accès externe).
+        Manifestes Kubernetes purs 
 
         Intégration d'Argo CD (GitOps) :
 
-            Installer Argo CD sur le cluster Kubernetes.
-
-            Configurer une application Argo CD pointant vers votre dépôt Git (où se trouvent vos fichiers YAML).
-
-            Test du flux GitOps : Modifier le nombre de réplicas ou passer à la version v2 directement dans le fichier YAML sur Git, commiter, et observer Argo CD synchroniser et appliquer automatiquement les changements sur le cluster en temps réel.
+            
 
 Étape 3 : Partie 3 - Monitoring et Observabilité (Prometheus & Grafana)
 
     Fonctionnalités à implémenter :
 
-        Installation de la pile de monitoring : Utiliser Helm pour installer la kube-prometheus-stack sur le cluster Kubernetes.
+        Installation de la pile de monitoring :
 
-        Collecte des métriques : Configurer Prometheus pour collecter l'utilisation du CPU, de la mémoire et le trafic réseau des pods de la webapp.
+        Collecte des métriques :
 
         Création du Tableau de Bord (Dashboard Grafana) :
 
-            Accéder à l'interface de Grafana.
-
-            Créer ou importer un dashboard personnalisé pour visualiser en direct les performances de l'application lors de tests de charge (générés par exemple avec l'outil ab ou wrk).
-
-#### 4. Structure Recommandée du Projet (sur Git)
-
-Organisez votre dépôt de cette manière pour qu'il soit propre et professionnel :
-Plaintext
-
-```Bash
-
-/mon-projet-cloud
-│
-├── README.md                 
-├── application/              
-│   ├── app.py (ou server.js)
-│   └── Dockerfile
-│
-├── part1-docker-swarm/       
-│   ├── Vagrantfile
-│   └── playbook.yml
-│
-├── part2-kubernetes/         
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── ingress.yaml
-│
-└── part3-monitoring/         
-    └── values-override.yaml 
-```
-
-
-#### 5. Critères de Réussite / Démonstration pour la Soutenance
-
-Pour valider le projet lors d'une présentation, vous devez être capable de montrer :
-
-    L'automatisation Swarm : Les VM se lancent seules via Vagrant/Ansible, le cluster est actif et réagit au mode drain.
-
-    Le fonctionnement d'Argo CD : Un changement de code ou de configuration dans Git se répercute visuellement et instantanément sur le cluster Kubernetes via l'interface d'Argo CD.
-
-    Le Monitoring en action : Générer de la charge sur l'application web et voir les courbes de consommation CPU/RAM s'affoler en temps réel sur le dashboard Grafana.
+ 
