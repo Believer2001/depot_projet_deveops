@@ -1,0 +1,5 @@
+[swarm_managers]
+vm1-manager
+
+[swarm_workers]
+vm2-worker

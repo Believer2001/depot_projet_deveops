@@ -1,0 +1,17 @@
+---
+- name: Nettoyer la stack et l'application sur le cluster Swarm
+  hosts: swarm_managers
+  become: yes
+  tasks:
+    - name: Supprimer la stack Docker Swarm
+      command: docker stack rm mon_stack
+      ignore_errors: yes
+
+    - name: Attendre un instant que les conteneurs s'arrêtent
+      pause:
+        seconds: 5
+
+    - name: Supprimer le dossier de l'application sur le manager
+      file:
+        path: /opt/monapp
+        state: absent

@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    image: monapp:v1
+    ports:
+      - "8080:5000"
+    environment:
+      - APP_VERSION=v1
+    deploy:
+      replicas: 10
+      update_config:
+        parallelism: 1
+        delay: 10s

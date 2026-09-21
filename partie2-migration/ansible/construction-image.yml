@@ -1,0 +1,13 @@
+---
+- name: Préparer, construire et pousser l'image sur Docker Hub
+  hosts: localhost   # On fait le build et le push depuis ta machine de contrôle (WSL2) pour éviter de stocker tes mots de passe sur les VM
+  gather_facts: no
+  tasks:
+    - name: Se connecter à Docker Hub
+      command: docker login -u "{{ docker_user }}" -p "{{ docker_password }}"
+
+    - name: Build de l'image Docker localement
+      command: docker build -t "{{ docker_user }}/monapp:v1" ../../application/
+
+    - name: Pousser l'image sur Docker Hub
+      command: docker push "{{ docker_user }}/monapp:v1"

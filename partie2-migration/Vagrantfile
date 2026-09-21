@@ -1,0 +1,23 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204" 
+
+  config.vm.define "k8s-master" do |master|
+    master.vm.hostname = "k8s-master"
+    master.vm.network "private_network", ip: "192.168.40.20"
+    master.vm.provider "vmware_desktop" do |v|
+      v.memory = 3072
+      v.cpus = 2
+    end
+  end
+
+  # Configuration du Nœud Worker
+  config.vm.define "k8s-worker" do |worker|
+    worker.vm.hostname = "k8s-worker"
+    worker.vm.network "private_network", ip: "192.168.40.21"
+    worker.vm.provider "vmware_desktop" do |v|
+      v.memory = 4096
+      v.cpus = 2
+    end
+  end
+
+end

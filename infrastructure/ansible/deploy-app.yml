@@ -1,0 +1,77 @@
+- name: Construire et envoyer l'image sur Docker Hub desde le Manager
+  hosts: swarm_managers
+  become: yes
+  vars:
+# 1. On lit le fichier comme du texte brut (sans chercher de sections INI)
+    env_root: "{{ lookup('ansible.builtin.file', '../../.env') }}"
+    env_app: "{{ lookup('ansible.builtin.file', '../../application/.env') }}"
+
+    # 2. On extrait la valeur exacte et on nettoie les retours à la ligne Windows (\r\n)
+    docker_hub_user: "{{ env_root | regex_search('DOCKER_HUB_USER=(.*)', '\\1') | first | trim }}"
+    docker_hub_password: "{{ env_root | regex_search('DOCKER_HUB_PASSWORD=(.*)', '\\1') | first | trim }}"
+    image_name: "{{ env_root | regex_search('APP_NAME=(.*)', '\\1') | first | trim }}"
+    image_tag: "{{ env_app | regex_search('APP_VERSION=(.*)', '\\1') | first | trim }}"
+
+
+
+   
+  tasks:
+
+    - name: S'assurer que pip3 et les dépendances système sont installés
+      apt:
+        name:
+          - python3-pip
+          - python3-docker 
+        state: present
+        update_cache: yes
+
+    - name: Forcer une version compatible de requests si nécessaire
+      pip:
+        name: 
+          - "requests==2.31.0"
+          - "urllib3<2"
+        state: present
+
+
+
+
+
+    - name: Créer le dossier de l'application sur le manager
+      file:
+        path: /opt/monapp
+        state: directory
+        mode: '0755'
+
+    - name: Copier le code source et le Dockerfile sur le manager
+      copy:
+        src: ../../application/
+        dest: /opt/monapp/
+
+    - name: Se connecter à Docker Hub
+      community.docker.docker_login:
+        username: "{{ docker_hub_user }}"
+        password: "{{ docker_hub_password }}"
+
+    - name: Construire l'image et l'envoyer sur Docker Hub
+      community.docker.docker_image:
+        build:
+          path: /opt/monapp
+        name: "{{ docker_hub_user }}/{{ image_name }}"
+        tag: "{{ image_tag }}"
+        push: yes
+        source: build
+
+- name: Déployer la stack Swarm depuis le manager
+  hosts: swarm_managers
+  become: yes
+  vars:
+    env_root: "{{ lookup('ansible.builtin.file', '../../.env') }}"
+    docker_hub_user: "{{ env_root | regex_search('DOCKER_HUB_USER=(.*)', '\\1') | first | trim }}"
+  tasks:
+    - name: Copier le fichier docker-compose sur le manager
+      copy:
+        src: ../../application/docker-compose.yml
+        dest: /opt/monapp/docker-compose.yml
+
+    - name: Lancer le déploiement de la stack Swarm
+      command: docker stack deploy --with-registry-auth -c /opt/monapp/docker-compose.yml mon_stack

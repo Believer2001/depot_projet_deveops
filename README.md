@@ -4,8 +4,7 @@
 
 #### 1. objectif du projet
 
-L'objectif global de ce projet est de comparer deux orchestrateurs de conteneurs : D
-ocker Swarm (natif à Docker), reconnu pour sa légèreté et sa simplicité, et Kubernetes, réputé pour sa robustesse et son adaptabilité à l'écosystème Cloud-Native.  Pour mettre en oeuvre cette étude comparative, nous allons  procéder comme suit.
+L'objectif global de ce projet est de comparer deux orchestrateurs de conteneurs : Docker Swarm (natif à Docker), reconnu pour sa légèreté et sa simplicité, et Kubernetes, réputé pour sa robustesse et son adaptabilité à l'écosystème Cloud-Native.  Pour mettre en oeuvre cette étude comparative, nous allons  procéder comme suit.
 
 - La mise en oeuvre d'un  pipeline Devops  permettant d'automatiser provisionnement des serveurs et synchronisation continue des déploiements via Argo CD
 
@@ -39,22 +38,37 @@ Le projet est divisé en deux environnements distincts :
 #### 3. Étapes Détaillées de Réalisation
 Étape 0 : Préparation de l'Application Cible
 
-   
+A cette étape nous avons developper une petite application web qui permet de faire le test de notre déploiement. 
+
 
 Étape 1 : Partie 1 - Infrastructure Légère avec Docker Swarm
 
-    Fonctionnalités implémentées:
+**Fonctionnalités implémentées:**
 
-        Provisionnement automatisé : 
+- **Provisionnement automatisé** : 
+        
+    On crée les machines virtuelles pour le projet  via le fichier vagrant  après l'avoir adapter  les plugins nécessaire pour faire  l'utilisatilisation de **vmware**. Avant ce la, on doit s'assurer d'avoir le logiciel **Vagrant**
+    commande  powershell pour créer les *VM* via la commande powershell : 
 
-        Initialisation du Cluster 
+       ```bash
+       # pour  adapter vagrant à l hyperviseur vmware vagrant 
+        
+       plugin install vagrant-vmware-desktop
 
-        Déploiement et Contraintes 
+       # pour lancer les machine : 
 
-        Mise à l'échelle (Scaling) et Rolling Update :
+       vagrant up --provider=vmware_desktop
+
+       ```
+
+- **Initialisation du Cluster** 
+
+- **Déploiement et Contraintes** 
+
+- **Mise à l'échelle (Scaling) et Rolling Update :**
 
 
-        Résilience (Drain Mode)
+- **Résilience (Drain Mode)**
 
 Étape 2 : Partie 2 - Migration vers Kubernetes & Approche GitOps (Argo CD)
 

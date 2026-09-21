@@ -1,0 +1,108 @@
+---
+- hosts: k8s_cluster
+  become: yes
+  tasks:
+    - name: 1. Désactiver le swap immédiatement
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Désactiver le swap de manière permanente dans /etc/fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+    - name: 2. Charger les modules noyau pour containerd
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Charger les modules en mémoire
+      modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: 3. Paramètres sysctl pour Kubernetes
+      copy:
+        dest: /etc/sysctl.d/k8s.conf
+        content: |
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward                 = 1
+
+    - name: Appliquer les paramètres sysctl
+      command: sysctl --system
+    
+
+    - name: 4. Installer les prérequis pour les dépôts apt
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gpg
+        state: present
+        update_cache: yes
+
+    - name: 5. Installer et configurer containerd
+      apt:
+        name: containerd
+        state: present
+
+    - name: Créer le dossier de configuration containerd
+      file:
+        path: /etc/containerd
+        state: directory
+
+
+
+    - name: Générer la configuration par défaut de containerd
+      shell: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Activer le systemdcgroup pour containerd (requis par K8s)
+      lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        line: 'SystemdCgroup = true'
+
+    - name: Redémarrer et activer containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+
+    - name: 6. Ajouter la clé GPG officielle du dépôt Kubernetes
+      shell: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Ajouter le dépôt Kubernetes stable (v1.28)
+      copy:
+        dest: /etc/apt/sources.list.d/kubernetes.list
+        content: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /\n"
+
+    - name: 7. Installer Kubelet, Kubeadm et Kubectl
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: Bloquer les versions pour éviter les mises à jour automatiques cassantes
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl

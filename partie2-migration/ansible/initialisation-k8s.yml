@@ -1,0 +1,63 @@
+---
+- name: Initialisation de kubernetes
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Initialiser le cluster Kubernetes
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Créer le dossier .kube pour l'utilisateur root
+      file:
+        path: /root/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Copier la configuration admin.conf pour root
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+        owner: root
+        group: root
+
+    - name: Installer le plugin réseau (Flannel)
+      command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+
+
+- name: Récupérer la commande join sur le master
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Générer le token et la commande join
+      command: kubeadm token create --print-join-command
+      register: join_command_raw
+
+    - name: Stocker la commande join dans les faits du master
+      set_fact:
+        kubeadm_join: "{{ join_command_raw.stdout }}"
+
+    - name: Configurer .kube pour l'utilisateur root/vagrant sur le master
+      file:
+        path: /root/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Copier la config admin.conf pour root
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+
+- name: Connecter le worker au cluster Kubernetes
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Rejoindre le cluster Kubernetes
+      command: "{{ hostvars['k8s-master']['kubeadm_join'] }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf

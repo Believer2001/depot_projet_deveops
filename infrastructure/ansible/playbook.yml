@@ -1,0 +1,63 @@
+---
+- name: Installer et configurer Docker Engine
+  # On cible "all" pour inclure à la fois swarm_managers et swarm_workers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Mettre à jour le cache apt
+      apt:
+        update_cache: yes
+
+    - name: Installer les prérequis
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+        state: present
+
+    - name: Télécharger et exécuter le script d'installation officiel de Docker
+      shell: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: S'assurer que le service Docker est démarré et activé
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ajouter l'utilisateur vagrant au groupe docker
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+
+- name: Initialiser Docker Swarm sur le Manager
+  hosts: swarm_managers
+  become: yes
+  tasks:
+    - name: Initialiser le cluster Swarm
+      shell: docker swarm init --advertise-addr eth1
+      register: swarm_init
+      # On ignore l'erreur si le Swarm est déjà initialisé
+      failed_when: false
+      changed_when: "'Swarm initialized' in swarm_init.stdout"
+
+    - name: Récupérer le token pour rejoindre le Swarm en tant que Worker
+      shell: docker swarm join-token -q worker
+      register: worker_token
+      changed_when: false
+
+- name: Joindre les Workers au cluster Swarm
+  hosts: swarm_workers
+  become: yes
+  tasks:
+    - name: Rejoindre le cluster Swarm
+      shell: "docker swarm join --token {{ hostvars[groups['swarm_managers'][0]]['worker_token'].stdout }} {{ hostvars[groups['swarm_managers'][0]]['ansible_default_ipv4']['address'] }}:2377"
+      register: swarm_join
+      failed_when: false
+      changed_when: "'This node joined a swarm' in swarm_join.stdout"
