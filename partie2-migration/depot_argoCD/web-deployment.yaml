@@ -28,7 +28,7 @@ spec:
         - env:
             - name: APP_VERSION
               value: V1
-          image: believer2001/monapp:v1
+          image: believer2001/monapp:V1
           imagePullPolicy: Always
           name: web
           ports:
