@@ -1,0 +1,16 @@
+---
+- name: Déploiement de ArgoCD
+  hosts: k8s-master
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Créer le namespace argocd
+      command: kubectl create namespace argocd
+      register: create_ns
+      failed_when: create_ns.rc != 0 and 'already exists' not in create_ns.stderr
+      changed_when: "'created' in create_ns.stdout"
+
+    - name: Déployer les manifestes Argo CD (v2.11.3)
+      command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.3/manifests/install.yaml
+      register: apply_argocd
+      changed_when: "'configured' in apply_argocd.stdout or 'created' in apply_argocd.stdout"

@@ -1,0 +1,43 @@
+---
+- hosts: k8s_cluster  # Cible l'ensemble de ton cluster (master et workers)
+  become: yes
+  tasks:
+    - name: 1. Installer UFW
+      apt:
+        name: ufw
+        state: present
+
+    - name: 2. Définir les politiques par défaut (Refuser entrant, Autoriser sortant)
+      ufw:
+        direction: incoming
+        policy: deny
+
+    - name: 3. Autoriser les connexions SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: 4. Autoriser l'API Server Kubernetes (Uniquement sur le master)
+      ufw:
+        rule: allow
+        port: '6443'
+        proto: tcp
+      when: inventory_hostname == 'k8s-master'
+    
+    - name: 5. Autoriser l'interface de argocd 
+      ufw:
+        rule: allow
+        port: '8085'
+        proto: tcp
+      when: inventory_hostname == 'k8s-master'
+
+
+    - name: 6. Autoriser le trafic interne entre les nœuds (Optionnel mais recommandé pour Flannel/Cilium)
+      ufw:
+        rule: allow
+        from_ip: '192.168.0.0/16'  # Remplace par ton sous-réseau privé Vagrant si besoin
+
+    - name: 7. Activer UFW
+      ufw:
+        state: enabled
+        policy: deny
