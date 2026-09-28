@@ -84,6 +84,15 @@ A cette étape nous avons developper une petite application web qui permet de fa
 
 Étape 3 : Partie 3 - Monitoring et Observabilité (Prometheus & Grafana)
 
+Pour la  partie  de suiveillance nous allons deploier le stack  prometheus et grafana.
+
+installations nécessaire sur la machine de controle : 
+
+```bash
+ansible-galaxy collection install community.kubernetes
+ansible-galaxy collection install cloud.terraform
+
+```
     Fonctionnalités à implémenter :
 
         Installation de la pile de monitoring :
