@@ -10,7 +10,7 @@
         name:
           - python3-pip
           - python3-kubernetes
-          - curl          # Nécessaire pour télécharger le script d'installation de Helm
+          - curl          
         state: present
         update_cache: yes
 

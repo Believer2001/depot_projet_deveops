@@ -1,6 +1,5 @@
 ---
 - name: Installer et configurer Docker Engine
-  # On cible "all" pour inclure à la fois swarm_managers et swarm_workers
   hosts: all
   become: yes
   tasks:
@@ -43,7 +42,6 @@
     - name: Initialiser le cluster Swarm
       shell: docker swarm init --advertise-addr eth1
       register: swarm_init
-      # On ignore l'erreur si le Swarm est déjà initialisé
       failed_when: false
       changed_when: "'Swarm initialized' in swarm_init.stdout"
 
