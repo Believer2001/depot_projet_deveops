@@ -65,6 +65,40 @@ Nous deploions ainsi ArgoCD pour automatiser le deploiement de notre   applicati
 ![image](./images/i6.png)
 
 Nous pouvons proccéder au déployement de notre web app via le  des  `git push` où nous avons les images. Pour le déployement nous avons.
+![image](./images/i7.png)
+
+
+#### Phase 3 
+
+1.  deployement  du stack *promethus-grafana*
+
+- D'abord  nous installons  sur la machine de  physique, la collection ansible qui permet d'interagir directement avec le  cluster k8s sans passer pas le protcole *ssh*. pour cela nous avons exécutons la commande  suivante :
+
+```bash
+ansible-galaxy collection install community.kubernetes
+```
+
+- Ensuite nous avons   deploié   le stack  promethus-grafana en utilisant la  le **Helm kube-prometheus-stack**. notre playbook de deploiement contient ainsi, un play de création de namespace (nonmmé *monitoring*), les play de deploiement de promethus de grafana, et de node Exporter /Kube state metrics ( qui permet collecte des métriques système des nœuds et des objets Kubernetes).
+
+
+Après l'execution de ce playbook la commande  `kubectl get pods -n monitoring`
+
+![image](./images/i8.png)
+
+- Interface de promethus :
+
+![image](./images/i9.png)
+
+- Interface de grafana : 
+
+![image](./images/i10.png)
+![image](./images/i11.png)
+
+![image](./images/i12.png)
+
+![image](./images/i13.png)
+
+
 
 
 
